@@ -1,0 +1,7 @@
+flask
+customtkinter
+aiohttp
+pandas
+openpyxl
+beautifulsoup4
+lxml
