@@ -1,25 +1,83 @@
-from flask import Flask, render_template, request, send_file
+from flask import Flask, request, send_file
 import asyncio
-import os
 from scraper import fetch_html_async
 from analyzer import analyze_seo_and_gbob
 from exporter import export_to_web_excel
 
-# Vercel path fixing: explicitly telling Flask where the templates folder is
-template_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), 'templates'))
-app = Flask(__name__, template_folder=template_dir)
+app = Flask(__name__)
+
+# Hamein alag se index.html file ki zaroorat hi nahi, HTML direct yahan handle hoga
+HTML_TEMPLATE = """
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI SEO & GBOB Automation Tool</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #121212;
+            color: #e0e0e0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .container {
+            background-color: #1e1e1e;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+            width: 500px;
+            text-align: center;
+        }
+        h1 { color: #bb86fc; margin-bottom: 20px; }
+        textarea {
+            width: 100%;
+            height: 150px;
+            background-color: #2d2d2d;
+            color: #fff;
+            border: 1px solid #444;
+            border-radius: 5px;
+            padding: 10px;
+            box-sizing: border-box;
+            resize: none;
+            margin-bottom: 20px;
+        }
+        button {
+            background-color: #bb86fc;
+            color: #121212;
+            border: none;
+            padding: 12px 25px;
+            font-size: 16px;
+            font-weight: bold;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        button:hover { background-color: #9965f4; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>AI SEO & GBOB Tool</h1>
+        <p>Enter your website domains below (one per line):</p>
+        <form action="/analyze" method="POST">
+            <textarea name="domains" placeholder="example.com&#10;mysite.com"></textarea>
+            <br>
+            <button type="submit">Analyze & Export Excel</button>
+        </form>
+    </div>
+</body>
+</html>
+"""
 
 @app.route('/')
 def home():
-    try:
-        # standard templates/index.html load karega
-        return render_template('index.html')
-    except Exception as e:
-        # Agar phir bhi koi galti ho to backup check karega
-        try:
-            return render_template('templates/index.html')
-        except Exception:
-            return f"Python Error on Home Route: {str(e)}"
+    # Bina kisi external file ke direct HTML screen par load ho jayegi
+    return HTML_TEMPLATE
 
 @app.route('/analyze', methods=['POST'])
 def analyze():
@@ -34,7 +92,6 @@ def analyze():
         for domain in domains:
             url = domain if domain.startswith(("http://", "https://")) else f"https://{domain}"
             try:
-                # Vercel serverless friendly async handler
                 try:
                     loop = asyncio.get_event_loop()
                 except RuntimeError:
@@ -62,5 +119,4 @@ def analyze():
     except Exception as e:
         return f"Python Error on Analyze Route: {str(e)}"
 
-# Vercel compliance link
 app = app
