@@ -47,6 +47,5 @@ def analyze():
         )
     return "No data processed", 400
 
-if __name__ == '__main__':
-    app.run(debug=True)
-    app = app  # This exposes the WSGI callable for Vercel
+app = app  
+
