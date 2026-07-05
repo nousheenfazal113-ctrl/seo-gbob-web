@@ -1,18 +1,25 @@
 from flask import Flask, render_template, request, send_file
 import asyncio
+import os
 from scraper import fetch_html_async
 from analyzer import analyze_seo_and_gbob
 from exporter import export_to_web_excel
 
-app = Flask(__name__)
+# Vercel path fixing: explicitly telling Flask where the templates folder is
+template_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), 'templates'))
+app = Flask(__name__, template_folder=template_dir)
 
 @app.route('/')
 def home():
     try:
-        # Agar index.html templates folder mein hai to yeh perfectly chalega
+        # standard templates/index.html load karega
         return render_template('index.html')
     except Exception as e:
-        return f"Python Error on Home Route: {str(e)}"
+        # Agar phir bhi koi galti ho to backup check karega
+        try:
+            return render_template('templates/index.html')
+        except Exception:
+            return f"Python Error on Home Route: {str(e)}"
 
 @app.route('/analyze', methods=['POST'])
 def analyze():
@@ -55,6 +62,5 @@ def analyze():
     except Exception as e:
         return f"Python Error on Analyze Route: {str(e)}"
 
-# Vercel ko host karne ke liye is line ka global rehna zaroori hai
+# Vercel compliance link
 app = app
-
